@@ -1,0 +1,9 @@
+
+<header>
+  <h1>Header partial</h1>
+  <% obj.pages.map(function(p) { %>
+    <a href="<%= p.path %>">
+      <%= p.title %>
+    </a>
+  <% }) %>
+</header>
