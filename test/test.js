@@ -1,6 +1,8 @@
 
 var fs = require('fs-extra');
 var path = require('path');
+var assert = require('assert');
+var colors = require('colors');
 var lodo = require('..');
 var pkg = require('../package.json');
 
@@ -21,34 +23,42 @@ var opts = {
     { name: 'Docs', path: '/docs',
       routes: [
         { name: 'Grid', path: '/grid' },
-        { name: 'Typography', path: '/typography' },
+        { name: 'Typography', path: '/typography',
+          //routes: [
+          //  { name: 'Headings', path: '/headings' }
+          //]
+        },
         { name: 'Tables', path: '/tables' },
       ]
     },
   ],
 };
 
-pages = lodo(opts);
 
-// Only two levels deep?
 function writePage(page) {
-  var pagePath;
-  var parents = [];
-  var parentpath;
-  console.log('Writing', page.path);
-  if (page.parent) { parents.push(page.parent) }
-  parentpath = parents.map(function(p) {
-    return p.path;
-  }).join('');
-  pagePath = path.join(__dirname, parentpath + page.path);
-  console.log(pagePath);
+  var pagePath = path.join(__dirname, page.fullpath);
   fs.ensureDirSync(pagePath);
   fs.writeFileSync(pagePath + '/index.html', page.body);
+  console.log((pagePath + ' written').green);
   if (page.routes) {
     page.routes.forEach(writePage);
   }
 }
 
-pages.forEach(writePage);
+
+describe('lodo', function() {
+
+  it('should not throw', function() {
+    assert.doesNotThrow(function() {
+      pages = lodo(opts);
+      pages.forEach(writePage);
+    });
+  });
+
+  it('should return an array', function() {
+    assert.equal(Array.isArray(pages), true);
+  });
+
+});
 
 

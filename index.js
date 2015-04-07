@@ -35,21 +35,26 @@ module.exports = function(opts) {
     var matter;
     var ext;
     var parent = false;
+    var fullpath = false;
 
     if (this.path) {
       parent = {
         name: this.name,
         path: this.path,
-      }
-      filepath = path.join(opts.src, parent.path + route.path + '/index.md');
+        // Currently this won't get fullpath because it doesn't exist yet
+        fullpath: this.fullpath || this.path,
+      };
+      fullpath = parent.fullpath + route.path;
+      filepath = path.join(opts.src, fullpath + '/index.md');
     } else {
-      filepath = path.join(opts.src, route.path + '/index.md');
+      fullpath = route.path;
+      filepath = path.join(opts.src, fullpath + '/index.md');
     }
 
     ext = 'md';
     contents = fs.existsSync(filepath) ? fs.readFileSync(filepath, 'utf8') : false;
     if (!contents) {
-      filepath = filepath.replace(/md$/, 'html');
+      filepath = filepath.replace(/\.md$/, '.html');
       ext = 'html';
       contents = fs.existsSync(filepath) ? fs.readFileSync(filepath, 'utf8') : false;
     }
@@ -65,6 +70,7 @@ module.exports = function(opts) {
       name: route.name,
       title: route.title || matter.attributes. title || _.capitalize(route.name),
       path: route.path,
+      fullpath: fullpath,
       page: matter.attributes,
       body: matter.body,
       ext: ext,

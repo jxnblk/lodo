@@ -9,6 +9,7 @@
   "author": "Brent Jackson",
   "license": "MIT",
   "dependencies": {
+    "colors": "^1.0.3",
     "front-matter": "^1.0.0",
     "fs-extra": "^0.18.0",
     "fs-readdir-recursive": "^0.1.1",
