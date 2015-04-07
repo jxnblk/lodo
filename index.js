@@ -50,11 +50,18 @@ module.exports = function(opts) {
     }
     return {
       path: filepath,
+      depth: dirs.length,
       filename: file,
       title: matter.attributes.title || filepath,
       page: matter.attributes,
       body: matter.body,
     }
+  });
+
+  pages.reverse();
+
+  pages.sort(function(a, b) {
+    return a.depth - b.depth;
   });
 
   // for in-template routing
