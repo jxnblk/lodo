@@ -24,9 +24,10 @@ var opts = {
       routes: [
         { name: 'Grid', path: '/grid' },
         { name: 'Typography', path: '/typography',
-          //routes: [
-          //  { name: 'Headings', path: '/headings' }
-          //]
+          routes: [
+            { name: 'Headings', path: '/headings' },
+            { name: 'Lists', path: '/lists' },
+          ]
         },
         { name: 'Tables', path: '/tables' },
       ]

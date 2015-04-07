@@ -27,6 +27,26 @@ module.exports = function(opts) {
   opts.include = include;
 
 
+  function createFullPaths(routes, newRoutes, prefix) {
+    var prefix = prefix || '';
+    var newRoutes = newRoutes || [];
+    routes.forEach(function(route) {
+      if (prefix) {
+        route.fullpath = prefix + route.path;
+      } else {
+        route.fullpath = route.path;
+        newRoutes.push(route);
+      }
+      if (route.routes) {
+        createFullPaths(route.routes, newRoutes, route.fullpath);
+      }
+    });
+    return newRoutes;
+  }
+
+
+  opts.routes = createFullPaths(opts.routes);
+
   function createRouteObj(route, i, arr) {
 
     var obj;
@@ -35,21 +55,17 @@ module.exports = function(opts) {
     var matter;
     var ext;
     var parent = false;
-    var fullpath = false;
 
     if (this.path) {
       parent = {
         name: this.name,
         path: this.path,
-        // Currently this won't get fullpath because it doesn't exist yet
-        fullpath: this.fullpath || this.path,
+        fullpath: this.fullpath,
       };
-      fullpath = parent.fullpath + route.path;
-      filepath = path.join(opts.src, fullpath + '/index.md');
-    } else {
-      fullpath = route.path;
-      filepath = path.join(opts.src, fullpath + '/index.md');
     }
+
+    filepath = path.join(opts.src, route.fullpath + '/index.md');
+    console.log(filepath);
 
     ext = 'md';
     contents = fs.existsSync(filepath) ? fs.readFileSync(filepath, 'utf8') : false;
@@ -70,7 +86,7 @@ module.exports = function(opts) {
       name: route.name,
       title: route.title || matter.attributes. title || _.capitalize(route.name),
       path: route.path,
-      fullpath: fullpath,
+      fullpath: route.fullpath,
       page: matter.attributes,
       body: matter.body,
       ext: ext,

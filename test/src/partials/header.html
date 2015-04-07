@@ -1,16 +1,21 @@
 
-<header>
-  <h1>Header partial</h1>
-  <% obj.routes.map(function(route) { %>
-    <a href="<%= route.path %>" class="mr1 button button-small button-link">
+
+<% function link(route) { %>
+  <li>
+    <a href="<%= route.fullpath %>">
       <%= route.title %>
     </a>
     <% if (route.routes) { %>
-      <% route.routes.map(function(subroute) { %>
-        <a href="<%= route.path + subroute.path %>" class="mr1 button button-small button-link">
-          <%= subroute.title %>
-        </a>
-      <% }) %>
+      <ul>
+        <% route.routes.map(link) %>
+      </ul>
     <% } %>
-  <% }) %>
+  </li> 
+<% } %>
+
+<header>
+  <h1>Header partial</h1>
+  <ul>
+    <% obj.routes.map(link) %>
+  </ul>
 </header>

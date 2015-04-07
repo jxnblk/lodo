@@ -1,6 +1,3 @@
----
----
-
 # Headings
 
 # Hamburger
