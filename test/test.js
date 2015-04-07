@@ -16,16 +16,39 @@ var opts = {
   stylesheets: [
     'http://d2v52k3cl9vedd.cloudfront.net/bassdock/1.3.0/bassdock.min.css'
   ],
+  routes: [
+    { name: 'Home', path: '/' },
+    { name: 'Docs', path: '/docs',
+      routes: [
+        { name: 'Grid', path: '/grid' },
+        { name: 'Typography', path: '/typography' },
+        { name: 'Tables', path: '/tables' },
+      ]
+    },
+  ],
 };
 
 pages = lodo(opts);
 
-
-pages.forEach(function(page) {
-  console.log(page.path);
-  console.log(page);
-  var pagePath = path.join(__dirname, page.path);
+// Only two levels deep?
+function writePage(page) {
+  var pagePath;
+  var parents = [];
+  var parentpath;
+  console.log('Writing', page.path);
+  if (page.parent) { parents.push(page.parent) }
+  parentpath = parents.map(function(p) {
+    return p.path;
+  }).join('');
+  pagePath = path.join(__dirname, parentpath + page.path);
+  console.log(pagePath);
   fs.ensureDirSync(pagePath);
   fs.writeFileSync(pagePath + '/index.html', page.body);
-});
+  if (page.routes) {
+    page.routes.forEach(writePage);
+  }
+}
+
+pages.forEach(writePage);
+
 

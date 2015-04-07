@@ -1,9 +1,10 @@
 
 var _ = require('lodash');
 var fs = require('fs');
+var path = require('path');
 var fm = require('front-matter');
 var marked = require('marked');
-var readdir = require('fs-readdir-recursive');
+//var readdir = require('fs-readdir-recursive');
 
 var renderer = require('./lib/marked-renderer');
 var read = require('./lib/read');
@@ -14,81 +15,92 @@ module.exports = function(opts) {
 
   var opts = opts || {};
   var pages = [];
-  var filenames = [];
 
   opts = _.defaults(opts, {
     layout: fs.readFileSync('layout.html', 'utf8'),
     partials: {},
-    match: /\.html$|\.md$/,
-    mdMatch: /\.md$/
+    MD_MATCH: /md|markdown/,
   });
+
 
   opts.extend = extend;
   opts.include = include;
 
-  filenames = readdir(opts.src, function (x) {
-    return (x[0] !== '.' && !x.match(/layouts|partials/));
-  });
- 
 
-  pages = filenames.map(function(filename) {
+  function createRouteObj(route, i, arr) {
 
-    var dirs = filename.split('/');
-    var file = dirs[dirs.length-1];
-    var filepath = '/';
+    var obj;
+    var filepath;
     var contents;
     var matter;
-    var body;
+    var ext;
+    var parent = false;
 
-    if (!file.match(opts.match)) { return false }
-    contents = fs.readFileSync(opts.src + '/' + filename, 'utf8');
-    matter = fm(contents);
-    //opts.page = matter.attributes;
-    if (dirs.length > 1) {
-      dirs.pop();
-      filepath = '/' + dirs.join('/');
+    if (this.path) {
+      parent = {
+        name: this.name,
+        path: this.path,
+      }
+      filepath = path.join(opts.src, parent.path + route.path + '/index.md');
+    } else {
+      filepath = path.join(opts.src, route.path + '/index.md');
     }
-    return {
-      path: filepath,
-      depth: dirs.length,
-      filename: file,
-      title: matter.attributes.title || filepath,
+
+    ext = 'md';
+    contents = fs.existsSync(filepath) ? fs.readFileSync(filepath, 'utf8') : false;
+    if (!contents) {
+      filepath = filepath.replace(/md$/, 'html');
+      ext = 'html';
+      contents = fs.existsSync(filepath) ? fs.readFileSync(filepath, 'utf8') : false;
+    }
+    if (!contents) {
+      console.log(('No template found for ' + route.path).red);
+      ext = false;
+      return false;
+    }
+
+    matter = fm(contents);
+
+    obj = {
+      name: route.name,
+      title: route.title || matter.attributes. title || _.capitalize(route.name),
+      path: route.path,
       page: matter.attributes,
       body: matter.body,
+      ext: ext,
+      parent: parent,
     }
-  });
 
-  pages.reverse();
+    if (route.routes) {
+      route.routes = route.routes.map(createRouteObj, route);
+      obj.routes = route.routes;
+    }
 
-  pages.sort(function(a, b) {
-    return a.depth - b.depth;
-  });
+    return obj;
 
-  // for in-template routing
-  opts.pages = pages;
+  }
 
-  // Render pages
-  pages = pages.map(function(page) {
-    opts.page = page.page;
-    opts.body = _.template(page.body)(opts);
-    if (page.filename.match(opts.mdMatch)) {
+
+  function renderPage(route) {
+    opts.page = route.page;
+    opts.body = _.template(route.body)(opts);
+    if (route.ext.match(opts.MD_MATCH)) {
       opts.body = marked(opts.body, { renderer: renderer });
     }
-    page.body = _.template(opts.layout)(opts);
-    return page;
-  });
+    route.body = _.template(opts.layout)(opts);
+    if (route.routes) {
+      route.routes = route.routes.map(renderPage);
+    }
+    return route;
+  };
 
-  // Convert markdown to HTML
-  //pages = pages.map(function(page) {
-  //  var obj = page;
-  //  if (page.filename.match(opts.mdMatch)) {
-  //    obj.html = marked(page.body, { renderer: renderer });
-  //  }
-  //  return obj;
-  //});
+
+  opts.routes = opts.routes.map(createRouteObj);
+  pages = opts.routes.map(renderPage);
 
 
   return pages;
+
 
 };
 
