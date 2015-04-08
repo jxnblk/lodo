@@ -12,12 +12,22 @@
       <link rel="stylesheet" href="<%= stylesheet %>">
     <% }) %>
   <% } %>
+  <style>
+    .border-2 { border-width: 2px }
+  </style>
 </head>
-<body class="p2">
+<body class="">
 
-<%= include('header') %>
+<div class="fixed top-0 left-0 bottom-0 px2 overflow-auto border-right border-2 border-darken-2 bg-aqua muted"
+    style="box-sizing:border-box;width:20%">
+  <%= include('header') %>
+</div>
 
-<%= body %>
+<div class="bg-fuchsia" style="margin-left:20%;">
+  <div class="md-col-10 px2 py4 mx-auto">
+    <%= body %>
+  </div>
+</div>
 
 </body>
 </html>

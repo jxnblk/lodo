@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var fm = require('front-matter');
 var marked = require('marked');
-//var readdir = require('fs-readdir-recursive');
+var toc = require('markdown-toc');
 
 var renderer = require('./lib/marked-renderer');
 var read = require('./lib/read');
@@ -17,7 +17,7 @@ module.exports = function(opts) {
   var pages = [];
 
   opts = _.defaults(opts, {
-    layout: fs.readFileSync('layout.html', 'utf8'),
+    layout: fs.readFileSync(path.join(__dirname, './layout.html'), 'utf8'),
     partials: {},
     MD_MATCH: /md|markdown/,
   });
@@ -65,7 +65,6 @@ module.exports = function(opts) {
     }
 
     filepath = path.join(opts.src, route.fullpath + '/index.md');
-    console.log(filepath);
 
     ext = 'md';
     contents = fs.existsSync(filepath) ? fs.readFileSync(filepath, 'utf8') : false;
@@ -102,6 +101,16 @@ module.exports = function(opts) {
 
   }
 
+  function addTOC(route) {
+    opts.page = route.page;
+    if (route.ext.match(opts.MD_MATCH)) {
+      route.sections = toc(_.template(route.body)(opts)).json;
+    }
+    if (route.routes) {
+      route.routes = route.routes.map(addTOC);
+    }
+    return route;
+  }
 
   function renderPage(route) {
     opts.page = route.page;
@@ -118,6 +127,7 @@ module.exports = function(opts) {
 
 
   opts.routes = opts.routes.map(createRouteObj);
+  opts.routes = opts.routes.map(addTOC);
   pages = opts.routes.map(renderPage);
 
 
